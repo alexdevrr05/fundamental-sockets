@@ -26,6 +26,7 @@ btnEnviar.addEventListener('click', () => {
     id: 'DAWD12EFAADW3',
     fecha: new Date().getTime(),
   };
+  console.log('payload ->', payload);
 
   socket.emit('enviar-mensaje', payload);
 });

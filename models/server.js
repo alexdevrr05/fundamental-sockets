@@ -11,7 +11,7 @@ class Server {
     this.port = process.env.PORT;
     this.server = require('http').createServer(this.app);
     this.io = require('socket.io')(this.server);
-
+    this.usuariosPath = '/api/usuarios';
     this.authPath = '/api/auth';
 
     this.conectarDB();
@@ -33,6 +33,7 @@ class Server {
   }
 
   routes() {
+    this.app.use(this.usuariosPath, require('../routes/usuarios'));
     this.app.use(this.authPath, require('../routes/auth'));
   }
 
