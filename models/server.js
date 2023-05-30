@@ -85,7 +85,7 @@ class Server {
           // Actualizar el estado del usuario a desconectado
           this.connectedUsers[index].isConnected = false;
 
-          // Eliminar al usuario del array
+          // TODO: Eliminar al usuario del array
 
           this.connectedUsers.splice(index, 1);
 
