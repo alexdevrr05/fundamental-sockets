@@ -4,6 +4,9 @@ const { json } = require('express');
 const { socketController } = require('../sockets/controller');
 const { connectDatabase } = require('../databases/config');
 
+const UAParser = require('ua-parser-js');
+const parser = new UAParser();
+
 class Server {
   constructor() {
     this.app = express();
@@ -45,14 +48,25 @@ class Server {
   sockets() {
     this.io.on('connection', (socket) => {
       socketController(socket);
+
+      const userAgent = socket.request.headers['user-agent'];
+      const result = parser.setUA(userAgent).getResult();
+      // console.log('Cliente conectado desde:', result);
+
       const ipAddress = socket.handshake.address; // Obtiene la dirección IP del cliente
       const socketId = socket.id;
+      const navegador = result.browser.name;
+      const os = result.os.name;
+      const device = result.device.vendor;
 
       // Almacenar la información del usuario conectado
       this.connectedUsers.push({
         socketId,
         isConnected: true,
         ipAddress,
+        navegador,
+        os,
+        dispositivo: device,
       });
 
       // Acciones cuando un usuario se conecta
@@ -72,6 +86,7 @@ class Server {
           this.connectedUsers[index].isConnected = false;
 
           // Eliminar al usuario del array
+
           this.connectedUsers.splice(index, 1);
 
           // Enviar la lista actualizada de usuarios conectados a todos los clientes

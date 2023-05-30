@@ -1,9 +1,4 @@
 const socketController = (socket) => {
-  const userAgent = socket.request.headers['user-agent'];
-  console.log('Cliente conectado desde:', userAgent);
-
-  // const connectedUsers = {};
-
   // socket.on('disconnect', () => {
   //   console.log('Cliente desconectado', socket.id);
   // });
