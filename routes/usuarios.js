@@ -5,11 +5,12 @@ const {
   usuariosGet,
   getUserDetails,
   usuariosDelete,
+  usuariosPost,
 } = require('../controllers/usuarios');
 const { loadUserSession } = require('../middlewares/loadUserSession');
 const { validarCampos, validarJWT, esAdminRole } = require('../middlewares');
 
-const { existeUsuarioPorId } = require('../helpers/db-validators');
+const { existeUsuarioPorId, emailExiste } = require('../helpers/db-validators');
 
 const router = Router();
 
@@ -27,5 +28,24 @@ router.delete(
   ],
 
   usuariosDelete
+);
+router.post(
+  '/',
+  [
+    check('nombre', 'El nombre es obligatorio').not().isEmpty(),
+    check(
+      'password',
+      'El password es obligatorio y debe de tener mínimo 6 caracteres'
+    )
+      .isLength({ min: 6 })
+      .not()
+      .isEmpty(),
+    check('email', 'El correo no es válido').isEmail(),
+    check('email').custom(emailExiste),
+    // check('rol', 'No es un rol permitido').isIn(['ADMIN_ROLE', 'USER_ROLE']),
+    // check('rol').custom((rol) => esRoleValido(rol)),
+    validarCampos,
+  ],
+  usuariosPost
 );
 module.exports = router;

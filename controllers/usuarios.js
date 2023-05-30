@@ -26,6 +26,23 @@ const usuariosGet = async (req = request, res = response) => {
   });
 };
 
+const usuariosPost = async (req = request, res = response) => {
+  const { nombre, email, password, rol } = req.body;
+
+  const usuario = new Usuario({ nombre, email, password, rol });
+
+  // Encriptar la contraseña
+  const salt = bcryptjs.genSaltSync();
+  usuario.password = bcryptjs.hashSync(password, salt);
+
+  // Guardar en la db
+  await usuario.save();
+
+  res.json({
+    usuario,
+  });
+};
+
 const usuariosDelete = async (req = request, res = response) => {
   // Lo borramos fisicamente
   // const usuario = await Usuario.findByIdAndDelete(id);
@@ -47,4 +64,5 @@ module.exports = {
   getUserDetails,
   usuariosGet,
   usuariosDelete,
+  usuariosPost,
 };
