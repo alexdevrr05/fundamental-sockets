@@ -51,30 +51,45 @@ class Server {
 
       const userAgent = socket.request.headers['user-agent'];
       const result = parser.setUA(userAgent).getResult();
-      // console.log('Cliente conectado desde:', result);
-
-      const ipAddress = socket.handshake.address; // Obtiene la dirección IP del cliente
+      const ipAddress = socket.handshake.address;
       const socketId = socket.id;
       const navegador = result.browser.name;
       const os = result.os.name;
       const device = result.device.vendor;
 
-      // Almacenar la información del usuario conectado
-      this.connectedUsers.push({
-        socketId,
-        isConnected: true,
-        ipAddress,
-        navegador,
-        os,
-        dispositivo: device,
+      // Inicia el temporizador
+      const startTime = process.hrtime();
+
+      // Escucha eventos de transferencia de datos del cliente al servidor
+      socket.on('dataTransfer', (data) => {
+        const dataSize = data.dataSize;
+        const transferTime = data.transferTime;
+
+        const bandwidth = dataSize / transferTime;
+
+        // Almacena la información del usuario conectado junto con el ancho de banda estimado
+        const connectedUser = {
+          socketId,
+          isConnected: true,
+          ipAddress,
+          navegador,
+          os,
+          dispositivo: device,
+          anchoBanda: bandwidth.toFixed(2), // Redondea el ancho de banda a dos decimales
+        };
+
+        // Acciones cuando un usuario se conecta
+
+        // TODO: Almacenar o utilizar la información del usuario conectado
+
+        // Enviar la información del usuario al cliente
+        socket.emit('connectedUser', connectedUser);
+
+        // Enviar la lista de usuarios conectados a todos los clientes
+        this.io.emit('users', this.connectedUsers);
       });
 
-      // Acciones cuando un usuario se conecta
-
-      // Enviar la lista de usuarios conectados a todos los clientes
-      this.io.emit('users', this.connectedUsers);
-
-      // Escuchar eventos de desconexión del usuario
+      // Escucha eventos de desconexión del usuario
       socket.on('disconnect', () => {
         // Buscar el usuario en el array
         const index = this.connectedUsers.findIndex(
