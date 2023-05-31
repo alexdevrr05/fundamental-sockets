@@ -57,8 +57,20 @@ class Server {
       const os = result.os.name;
       const device = result.device.vendor;
 
-      // Inicia el temporizador
-      const startTime = process.hrtime();
+      const connectedUser = {
+        socketId,
+        isConnected: true,
+        ipAddress,
+        navegador,
+        os,
+        dispositivo: device,
+        anchoBanda: 0, // Se inicializa con un valor de ancho de banda de 0
+      };
+
+      this.connectedUsers.push(connectedUser);
+
+      // Enviar la lista actualizada de usuarios conectados a todos los clientes
+      this.io.emit('users', this.connectedUsers);
 
       // Escucha eventos de transferencia de datos del cliente al servidor
       socket.on('dataTransfer', (data) => {
@@ -67,42 +79,31 @@ class Server {
 
         const bandwidth = dataSize / transferTime;
 
-        // Almacena la información del usuario conectado junto con el ancho de banda estimado
-        const connectedUser = {
-          socketId,
-          isConnected: true,
-          ipAddress,
-          navegador,
-          os,
-          dispositivo: device,
-          anchoBanda: bandwidth.toFixed(2), // Redondea el ancho de banda a dos decimales
-        };
+        // Actualizar el ancho de banda del usuario correspondiente en la lista
+        const userIndex = this.connectedUsers.findIndex(
+          (user) => user.socketId === socketId
+        );
+        if (userIndex !== -1) {
+          this.connectedUsers[userIndex].anchoBanda = bandwidth.toFixed(2);
+        }
 
-        // Acciones cuando un usuario se conecta
-
-        // TODO: Almacenar o utilizar la información del usuario conectado
-
-        // Enviar la información del usuario al cliente
-        socket.emit('connectedUser', connectedUser);
-
-        // Enviar la lista de usuarios conectados a todos los clientes
+        // Enviar la lista actualizada de usuarios conectados a todos los clientes
         this.io.emit('users', this.connectedUsers);
       });
 
       // Escucha eventos de desconexión del usuario
       socket.on('disconnect', () => {
-        // Buscar el usuario en el array
-        const index = this.connectedUsers.findIndex(
+        // Buscar el usuario en la lista por su socketId
+        const userIndex = this.connectedUsers.findIndex(
           (user) => user.socketId === socketId
         );
 
-        if (index !== -1) {
-          // Actualizar el estado del usuario a desconectado
-          this.connectedUsers[index].isConnected = false;
+        if (userIndex !== -1) {
+          // Marcar al usuario como desconectado
+          this.connectedUsers[userIndex].isConnected = false;
 
-          // TODO: Eliminar al usuario del array
-
-          this.connectedUsers.splice(index, 1);
+          // Eliminar al usuario de la lista
+          this.connectedUsers.splice(userIndex, 1);
 
           // Enviar la lista actualizada de usuarios conectados a todos los clientes
           this.io.emit('users', this.connectedUsers);
